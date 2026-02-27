@@ -15,7 +15,7 @@ module "tgw" {
 
   # Enable VPN-specific features
   enable_dns_support      = true
-  enable_vpn_ecmp_support = true  # Important for VPN load balancing
+  enable_vpn_ecmp_support = true # Important for VPN load balancing
 
   # Route table configuration
   enable_default_route_table_association = true

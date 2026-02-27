@@ -13,11 +13,11 @@ module "tgw" {
   amazon_side_asn = "64512"
 
   # Enable all features
-  enable_dns_support                     = true
-  enable_vpn_ecmp_support                = true
-  enable_auto_accept_shared_attachments  = true
-  enable_multicast_support               = false
-  enable_sg_referencing_support          = true
+  enable_dns_support                    = true
+  enable_vpn_ecmp_support               = true
+  enable_auto_accept_shared_attachments = true
+  enable_multicast_support              = false
+  enable_sg_referencing_support         = true
 
   # Route table configuration
   enable_default_route_table_association = true
@@ -25,6 +25,6 @@ module "tgw" {
 
   # Cross-account sharing via RAM
   share_tgw                     = true
-  ram_allow_external_principals = false  # Only within organization
+  ram_allow_external_principals = false # Only within organization
   ram_principals                = var.ram_principals
 }
