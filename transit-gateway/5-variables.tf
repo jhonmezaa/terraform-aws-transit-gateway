@@ -18,6 +18,12 @@ variable "tags_common" {
   default     = {}
 }
 
+variable "use_region_prefix" {
+  description = "Whether to include the region prefix in resource names. When false, names omit the region prefix."
+  type        = bool
+  default     = true
+}
+
 ################################################################################
 # Transit Gateway Variables
 ################################################################################

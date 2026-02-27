@@ -22,10 +22,13 @@ locals {
   # Get region prefix
   region_code = lookup(local.region_prefix, local.current_region, "unkn")
 
+  # Name prefix - conditionally includes region prefix based on use_region_prefix variable
+  name_prefix = var.use_region_prefix ? "${local.region_code}-" : ""
+
   # Resource names following nomenclature: {region}-{resource_type}-{account_name}-{project_name}
-  tgw_name       = "${local.region_code}-tgw-${var.account_name}-${var.project_name}"
-  tgw_rtb_name   = "${local.region_code}-tgwrtb-${var.account_name}-${var.project_name}"
-  ram_share_name = "${local.region_code}-ramshare-${var.account_name}-${var.project_name}"
+  tgw_name       = "${local.name_prefix}tgw-${var.account_name}-${var.project_name}"
+  tgw_rtb_name   = "${local.name_prefix}tgwrtb-${var.account_name}-${var.project_name}"
+  ram_share_name = "${local.name_prefix}ramshare-${var.account_name}-${var.project_name}"
 
   # This local was used for default route table tags but is no longer needed
   # Kept for backwards compatibility if referenced elsewhere

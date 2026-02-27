@@ -171,6 +171,7 @@ module "transit_gateway" {
 | ram_allow_external_principals | Whether to allow external principals for the resource share | `bool` | `false` |
 | ram_principals | List of principals to share the Transit Gateway with (AWS Account IDs, Organization ARNs, OU ARNs) | `list(string)` | `[]` |
 | ram_resource_share_arn | ARN of the Resource Share that will be used to share the Transit Gateway | `string` | `""` |
+| use_region_prefix | Whether to include the region prefix in resource names. When false, names omit the region prefix | `bool` | `true` |
 | tags_common | Common tags to be applied to all resources | `map(string)` | `{}` |
 | timeouts | Create, update, and delete timeout configurations for the transit gateway | `object` | `null` |
 
@@ -266,6 +267,22 @@ module "transit_gateway" {
 
   tags_common = {
     Environment = "shared"
+  }
+}
+```
+
+### Example Without Region Prefix
+
+```hcl
+module "transit_gateway" {
+  source = "path/to/module"
+
+  account_name      = "shared"
+  project_name      = "myapp"
+  use_region_prefix = false  # Names will be: tgw-shared-myapp, tgwrtb-shared-myapp, etc.
+
+  tags_common = {
+    Environment = "production"
   }
 }
 ```
