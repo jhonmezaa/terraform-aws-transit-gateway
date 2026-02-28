@@ -3,20 +3,20 @@
 ## [v1.1.0] - 2026-02-27
 
 ### Added
-- `use_region_prefix` boolean variable (default: `true`) to control whether the region prefix is included in resource names. When `false`, names omit the prefix
 
+- `use_region_prefix` boolean variable (default: `true`) to control whether the region prefix is included in resource names. When `false`, names omit the prefix
 
 ## [v1.0.2] - 2026-02-27
 
 ### Changed
-- Standardize Terraform `required_version` to `~> 1.0` across module and examples
 
+- Standardize Terraform `required_version` to `~> 1.0` across module and examples
 
 ## [v1.0.1] - 2026-02-27
 
 ### Changed
-- Update AWS provider constraint to `~> 6.0` across module and examples
 
+- Update AWS provider constraint to `~> 6.0` across module and examples
 
 All notable changes to this project will be documented in this file.
 
@@ -95,10 +95,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Configuration
 
 **Required Variables:**
+
 - `account_name` - Account name for resource naming
 - `project_name` - Project name for resource naming
 
 **Optional Variables:**
+
 - All Transit Gateway features configurable via optional variables with sensible defaults
 - Automatic resource naming without manual intervention
 - Flexible RAM sharing configuration
@@ -111,6 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features Highlights
 
 This module provides a production-ready Transit Gateway implementation with:
+
 - ✅ Multi-account sharing via RAM
 - ✅ Automatic resource naming following AWS best practices
 - ✅ Complete Transit Gateway feature support
