@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.1.3] - 2026-10-27
+
+### Changed
+
+- Normalize CHANGELOG: preamble moved to the top, all headings use the `## [vX.Y.Z] - YYYY-MM-DD` format, entries sorted by version (newest first)
+- Add missing entry for v1.1.1, reconstructed from git history
+
+### Fixed
+
+- Replace placeholder `source` paths (`path/to/...`) in README usage examples with `github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.1.2`
+
 ## [v1.1.2] - 2026-10-27
 
 ### Changed
@@ -13,6 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set module `required_version` to `>= 1.3` (was `~> 1.0`): the module uses `optional()` object type attributes (with defaults), which require Terraform 1.3; no newer features (`moved`/`import`/`check`/`removed`, cross-variable validations, provider-defined functions, ephemeral resources) are used
 - Examples (root modules) keep pessimistic constraints: `required_version` `~> 1.3`, AWS provider `~> 6.0`
 - Update Terraform and provider requirements in README
+
+## [v1.1.1] - 2026-02-28
+
+### Changed
+
+- Update README and CHANGELOG documentation
 
 ## [v1.1.0] - 2026-02-27
 
