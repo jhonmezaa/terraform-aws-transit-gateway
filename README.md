@@ -61,7 +61,7 @@ For a deployment in `us-east-2` (Ohio) with `account_name = "shared"` and `proje
 
 | Name      | Version  |
 | --------- | -------- |
-| terraform | >= 1.5.7 |
+| terraform | >= 1.3   |
 | aws       | >= 6.0   |
 
 ## Usage
