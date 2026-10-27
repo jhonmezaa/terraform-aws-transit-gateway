@@ -74,7 +74,7 @@ provider "aws" {
 }
 
 module "transit_gateway" {
-  source = "path/to/tf-module-core-networking-aws-transit-gateway"
+  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.1.2"
 
   # Naming (region is auto-detected from provider)
   account_name = "shared"
@@ -116,7 +116,7 @@ See the [example/terragrunt](./example/terragrunt) directory for a complete Terr
 
 ```hcl
 module "transit_gateway" {
-  source = "path/to/tf-module-core-networking-aws-transit-gateway"
+  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.1.2"
 
   account_name = "shared"
   project_name = "myapp"
@@ -212,7 +212,7 @@ You can share with:
 
 ```hcl
 module "transit_gateway" {
-  source = "path/to/module"
+  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.1.2"
 
   account_name = "shared"
   project_name = "myapp"
@@ -234,7 +234,7 @@ module "transit_gateway" {
 
 ```hcl
 module "transit_gateway" {
-  source = "path/to/module"
+  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.1.2"
 
   account_name = "shared"
   project_name = "myapp"
@@ -255,7 +255,7 @@ module "transit_gateway" {
 
 ```hcl
 module "transit_gateway" {
-  source = "path/to/module"
+  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.1.2"
 
   account_name = "shared"
   project_name = "myapp"
@@ -276,7 +276,7 @@ module "transit_gateway" {
 
 ```hcl
 module "transit_gateway" {
-  source = "path/to/module"
+  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.1.2"
 
   account_name      = "shared"
   project_name      = "myapp"
@@ -294,7 +294,7 @@ If you don't need to share the Transit Gateway or if AWS Organizations is not en
 
 ```hcl
 module "transit_gateway" {
-  source = "path/to/module"
+  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.1.2"
 
   account_name = "shared"
   project_name = "myapp"
