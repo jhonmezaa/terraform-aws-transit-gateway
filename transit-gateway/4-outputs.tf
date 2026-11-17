@@ -59,3 +59,12 @@ output "ram_principal_association_id" {
   description = "The Amazon Resource Name (ARN) of the Resource Share and the principal, separated by a comma"
   value       = try(aws_ram_principal_association.this[0].id, null)
 }
+
+################################################################################
+# Default Route Table Outputs
+################################################################################
+
+output "ec2_transit_gateway_default_route_table_tags" {
+  description = "Tags applied by the module to the default association route table (empty when tgw_default_route_table_tags is empty)"
+  value       = { for k, v in aws_ec2_tag.default_route_table : k => v.value }
+}
