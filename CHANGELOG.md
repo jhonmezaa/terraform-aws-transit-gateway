@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.0] - 2026-11-17
+
+### Added
+
+- `enable_encryption_support` (bool, default `null`) to set `encryption_support` on the Transit Gateway (parity with upstream `terraform-aws-modules/transit-gateway` v3.3.0). `null` leaves the AWS default untouched
+- `tgw_default_route_table_tags` (opt-in): when non-empty, the AWS-created default association route table is tagged through `aws_ec2_tag` with `tags_common` + these tags + `Name = {prefix}-tgwrtb-{account}-{project}-default` + `ManagedBy`. New output `ec2_transit_gateway_default_route_table_tags`
+- `region` variable (provider v6 per-resource region) applied to every resource and to the `aws_region` data source used for naming
+- `region_prefix` variable to override the region code used in names
+- `name` and `tgw_route_table_name` variables to override the generated Name tags
+- `tgw_tags`, `tgw_route_table_tags` and `ram_tags` variables for per-resource tags
+- Validation of `account_name` and `project_name` (1-32 characters, `^[a-z0-9-]+$`)
+- Precondition: `ram_resource_share_arn` is required when `create_tgw = false` and `share_tgw = true`
+- Full `region_prefix_map` (EU, AP, CA, MX, ME, AF and IL regions)
+- `LICENSE` (MIT) and README files for the `basic` and `cross-account` examples
+
+### Changed
+
+- Minimum AWS provider raised to `>= 6.25` in the module (`~> 6.25` in examples), required by `encryption_support`
+- Tags now follow `merge(tags_common, <resource tags>, { Name, ManagedBy = "Terraform" })`; `Name` can no longer be overridden by `tags_common`
+- `ram_name` is now honored as an explicit RAM share name (it was previously ignored)
+
+### Fixed
+
+- README: inputs/outputs tables now match the code (outputs are `ec2_transit_gateway_*`), removed references to non-existent `example/` directories and `9-locals.tf`, updated requirements, tag order and `source` refs
+- `vpn-integration` example README: use the published VPN module source and its actual inputs (`use_existing_transit_gateway`, `transit_gateway_id`, `transit_gateway_subnet_ids`)
+
+### Upgrade notes
+
+- Run `terraform init -upgrade` if your lock file pins an AWS provider older than 6.25.
+- A `ManagedBy = "Terraform"` tag is added to all resources (in-place tag update, no recreation).
+- In regions that were not in the previous map (e.g. `eu-west-2`, `ap-south-1`, `ca-central-1`), the prefix changes from `unkn` to the real code: the Name tags and the RAM share name change in place (no recreation). Set `region_prefix = "unkn"` to keep the old names.
+- If you were setting `ram_name`, the RAM share is renamed in place to that value. Remove `ram_name` to keep the generated name.
+- If `tags_common` contained a `Name` key, it no longer overrides the generated Name tag.
+
 ## [v1.1.3] - 2026-10-27
 
 ### Changed
