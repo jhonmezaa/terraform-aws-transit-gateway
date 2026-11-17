@@ -5,11 +5,31 @@
 variable "account_name" {
   description = "Account name to be used in resource naming (e.g., 'shared', 'prod', 'dev')"
   type        = string
+
+  validation {
+    condition     = length(var.account_name) >= 1 && length(var.account_name) <= 32
+    error_message = "account_name debe tener entre 1 y 32 caracteres."
+  }
+
+  validation {
+    condition     = can(regex("^[a-z0-9-]+$", var.account_name))
+    error_message = "account_name solo puede contener letras minúsculas, números y guiones."
+  }
 }
 
 variable "project_name" {
   description = "Project name to be used in resource naming (e.g., 'myapp', 'core')"
   type        = string
+
+  validation {
+    condition     = length(var.project_name) >= 1 && length(var.project_name) <= 32
+    error_message = "project_name debe tener entre 1 y 32 caracteres."
+  }
+
+  validation {
+    condition     = can(regex("^[a-z0-9-]+$", var.project_name))
+    error_message = "project_name solo puede contener letras minúsculas, números y guiones."
+  }
 }
 
 variable "tags_common" {
@@ -18,15 +38,39 @@ variable "tags_common" {
   default     = {}
 }
 
+variable "region_prefix" {
+  description = "Region prefix used in resource names. If null, it is derived from the current region using the internal region map."
+  type        = string
+  default     = null
+}
+
 variable "use_region_prefix" {
   description = "Whether to include the region prefix in resource names. When false, names omit the region prefix."
   type        = bool
   default     = true
 }
 
+variable "region" {
+  description = "Region where the resources will be managed. Defaults to the region set in the provider configuration."
+  type        = string
+  default     = null
+}
+
 ################################################################################
 # Transit Gateway Variables
 ################################################################################
+
+variable "name" {
+  description = "Explicit Name tag for the Transit Gateway. If null, the generated name is used."
+  type        = string
+  default     = null
+}
+
+variable "tgw_tags" {
+  description = "Additional tags for the Transit Gateway"
+  type        = map(string)
+  default     = {}
+}
 
 variable "create_tgw" {
   description = "Controls if Transit Gateway should be created"
@@ -98,6 +142,18 @@ variable "timeouts" {
   default = null
 }
 
+variable "enable_encryption_support" {
+  description = "Whether encryption support (VPC encryption control) is enabled on the Transit Gateway. null (default) leaves the provider/AWS default untouched. Requires AWS provider >= 6.25."
+  type        = bool
+  default     = null
+}
+
+variable "tgw_default_route_table_tags" {
+  description = "Tags for the default association route table created by AWS. When non-empty (and enable_default_route_table_association = true), the module tags it with tags_common + these tags + Name/ManagedBy using aws_ec2_tag."
+  type        = map(string)
+  default     = {}
+}
+
 variable "enable_sg_referencing_support" {
   description = "Whether security group referencing support is enabled"
   type        = bool
@@ -114,8 +170,20 @@ variable "create_tgw_routes" {
   default     = true
 }
 
+variable "tgw_route_table_name" {
+  description = "Explicit Name tag for the Transit Gateway route table. If null, the generated name is used."
+  type        = string
+  default     = null
+}
+
+variable "tgw_route_table_tags" {
+  description = "Additional tags for the Transit Gateway route table"
+  type        = map(string)
+  default     = {}
+}
+
 variable "transit_gateway_route_table_id" {
-  description = "Identifier of EC2 Transit Gateway Route Table to use when creating attachments"
+  description = "Not used by the module (it does not manage VPC attachments). Kept for backwards compatibility."
   type        = string
   default     = null
 }
@@ -131,7 +199,7 @@ variable "share_tgw" {
 }
 
 variable "ram_name" {
-  description = "Name of the resource share for the Transit Gateway"
+  description = "Explicit name for the RAM resource share. If empty, the generated name is used."
   type        = string
   default     = ""
 }
@@ -155,7 +223,13 @@ variable "ram_principals" {
 }
 
 variable "ram_resource_share_arn" {
-  description = "ARN of the Resource Share that will be used to share the Transit Gateway"
+  description = "ARN of the RAM resource share to accept. Required when create_tgw = false and share_tgw = true."
   type        = string
   default     = ""
+}
+
+variable "ram_tags" {
+  description = "Additional tags for the RAM resource share"
+  type        = map(string)
+  default     = {}
 }

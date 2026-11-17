@@ -14,6 +14,6 @@ output "ram_resource_share_id" {
 }
 
 output "ram_principal_association_id" {
-  description = "RAM Principal Association IDs"
+  description = "RAM Principal Association ID (first principal)"
   value       = module.tgw.ram_principal_association_id
 }

@@ -2,5 +2,7 @@
 # Data Sources
 ################################################################################
 
-# Get current AWS region from provider configuration
-data "aws_region" "current" {}
+# Region used for naming: var.region when set, otherwise the provider region
+data "aws_region" "current" {
+  region = var.region
+}
