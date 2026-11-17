@@ -27,10 +27,15 @@ After creating the Transit Gateway, use its ID with the VPN module:
 
 ```hcl
 module "vpn" {
-  source = "../../terraform-aws-vpn/vpn"
+  source = "github.com/jhonmezaa/terraform-aws-vpn//vpn?ref=v1.3.5"
 
-  # Use Transit Gateway ID from this example
-  transit_gateway_id = module.tgw.transit_gateway_id
+  account_name = "prod"
+  project_name = "vpn"
+
+  # Use the Transit Gateway created by this example
+  use_existing_transit_gateway = true
+  transit_gateway_id           = module.tgw.ec2_transit_gateway_id
+  transit_gateway_subnet_ids   = ["subnet-aaaa", "subnet-bbbb"]
 
   # VPN configuration
   customer_gateway_bgp_asn    = 65000
@@ -45,6 +50,9 @@ module "vpn" {
 - `transit_gateway_id` - Use this for VPN attachment
 - `transit_gateway_arn` - Transit Gateway ARN
 - `transit_gateway_route_table_id` - Route table ID for manual routing
+- `transit_gateway_owner_id` - Owner account ID of the Transit Gateway
+- `transit_gateway_association_default_route_table_id` - Default association route table ID
+- `transit_gateway_propagation_default_route_table_id` - Default propagation route table ID
 
 ## Cost Estimation
 

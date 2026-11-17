@@ -29,17 +29,27 @@ This module automatically generates resource names following a standardized form
 
 ### Region Codes
 
-| AWS Region     | Code  |
-| -------------- | ----- |
-| us-east-1      | ause1 |
-| us-east-2      | ause2 |
-| us-west-1      | ausw1 |
-| us-west-2      | ausw2 |
-| eu-west-1      | euwe1 |
-| eu-central-1   | euce1 |
-| ap-southeast-1 | apse1 |
-| ap-northeast-1 | apne1 |
-| sa-east-1      | saea1 |
+The prefix is resolved from the provider region (or `var.region`) using the internal `region_prefix_map` in `transit-gateway/7-locals.tf`. Set `region_prefix` to override it, or `use_region_prefix = false` to omit it. Regions not present in the map use `unkn`.
+
+| AWS Region | Code | AWS Region | Code |
+| --- | --- | --- | --- |
+| us-east-1 | ause1 | ap-southeast-1 | apse1 |
+| us-east-2 | ause2 | ap-southeast-2 | apse2 |
+| us-west-1 | ausw1 | ap-southeast-3 | apse3 |
+| us-west-2 | ausw2 | ap-southeast-4 | apse4 |
+| eu-west-1 | euwe1 | ap-southeast-5 | apse5 |
+| eu-west-2 | euwe2 | ap-southeast-6 | apse6 |
+| eu-west-3 | euwe3 | ap-southeast-7 | apse7 |
+| eu-central-1 | euce1 | ap-northeast-1 | apne1 |
+| eu-central-2 | euce2 | ap-northeast-2 | apne2 |
+| eu-north-1 | euno1 | ap-northeast-3 | apne3 |
+| eu-south-1 | euso1 | ap-south-1 | apso1 |
+| eu-south-2 | euso2 | ap-south-2 | apso2 |
+| sa-east-1 | saea1 | ap-east-1 | apea1 |
+| ca-central-1 | cace1 | ap-east-2 | apea2 |
+| ca-west-1 | cawe1 | me-south-1 | meso1 |
+| mx-central-1 | mxce1 | me-central-1 | mece1 |
+| af-south-1 | afso1 | il-central-1 | ilce1 |
 
 ### Resource Types
 
@@ -48,6 +58,7 @@ This module automatically generates resource names following a standardized form
 | Transit Gateway             | tgw      |
 | Transit Gateway Route Table | tgwrtb   |
 | RAM Resource Share          | ramshare |
+| Default association route table (tags only, opt-in) | tgwrtb-…-default |
 
 ### Example Names
 
@@ -62,7 +73,7 @@ For a deployment in `us-east-2` (Ohio) with `account_name = "shared"` and `proje
 | Name      | Version  |
 | --------- | -------- |
 | terraform | >= 1.3   |
-| aws       | >= 6.0   |
+| aws       | >= 6.25  |
 
 ## Usage
 
@@ -74,7 +85,7 @@ provider "aws" {
 }
 
 module "transit_gateway" {
-  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.1.2"
+  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.2.0"
 
   # Naming (region is auto-detected from provider)
   account_name = "shared"
@@ -97,26 +108,17 @@ module "transit_gateway" {
   tags_common = {
     Environment = "production"
     Project     = "Infrastructure"
-    ManagedBy   = "Terraform"
     Owner       = "Cloud-Team"
     CostCenter  = "IT-Infrastructure"
   }
 }
 ```
 
-### Example with Terragrunt
-
-See the [example/terragrunt](./example/terragrunt) directory for a complete Terragrunt implementation with:
-
-- Environment-specific configuration via `env.hcl`
-- Automatic backend configuration for remote state
-- DRY configuration management
-
 ### Example with RAM Sharing
 
 ```hcl
 module "transit_gateway" {
-  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.1.2"
+  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.2.0"
 
   account_name = "shared"
   project_name = "myapp"
@@ -124,7 +126,6 @@ module "transit_gateway" {
 
   # RAM Configuration
   share_tgw                     = true
-  ram_name                      = "tgw-share"
   ram_allow_external_principals = false
 
   # Share with specific accounts and organization
@@ -141,53 +142,87 @@ module "transit_gateway" {
 }
 ```
 
+### Example with Encryption Support and Default Route Table Tags
+
+```hcl
+module "transit_gateway" {
+  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.2.0"
+
+  account_name = "shared"
+  project_name = "myapp"
+
+  # Enable Transit Gateway encryption support (AWS provider >= 6.25)
+  enable_encryption_support = true
+
+  # Tag the default association route table created by AWS
+  # (Name = "{prefix}-tgwrtb-shared-myapp-default")
+  tgw_default_route_table_tags = {
+    Purpose = "default-association"
+  }
+}
+```
+
 ## Inputs
 
 ### Required Inputs
 
 | Name         | Description                                                                | Type     |
 | ------------ | -------------------------------------------------------------------------- | -------- |
-| account_name | Account name to be used in resource naming (e.g., 'shared', 'prod', 'dev') | `string` |
-| project_name | Project name to be used in resource naming (e.g., 'myapp', 'core')         | `string` |
+| account_name | Account name used in resource naming (1-32 chars, `^[a-z0-9-]+$`)          | `string` |
+| project_name | Project name used in resource naming (1-32 chars, `^[a-z0-9-]+$`)          | `string` |
 
 ### Optional Inputs
 
-| Name                                   | Description                                                                                        | Type           | Default |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------- | ------- |
-| create_tgw                             | Controls if Transit Gateway should be created                                                      | `bool`         | `true`  |
-| description                            | Description of the Transit Gateway                                                                 | `string`       | `null`  |
-| amazon_side_asn                        | Private Autonomous System Number (ASN) for the Amazon side of a BGP session                        | `string`       | `null`  |
-| enable_default_route_table_association | Whether resource attachments are automatically associated with the default association route table | `bool`         | `true`  |
-| enable_default_route_table_propagation | Whether resource attachments automatically propagate routes to the default propagation route table | `bool`         | `true`  |
-| enable_auto_accept_shared_attachments  | Whether resource attachment requests are automatically accepted                                    | `bool`         | `false` |
-| enable_vpn_ecmp_support                | Whether VPN Equal Cost Multipath Protocol support is enabled                                       | `bool`         | `true`  |
-| enable_multicast_support               | Whether Multicast support is enabled                                                               | `bool`         | `false` |
-| enable_dns_support                     | Whether DNS support is enabled                                                                     | `bool`         | `true`  |
-| enable_sg_referencing_support          | Whether security group referencing support is enabled                                              | `bool`         | `true`  |
-| transit_gateway_cidr_blocks            | One or more IPv4 or IPv6 CIDR blocks for the transit gateway                                       | `list(string)` | `[]`    |
-| create_tgw_routes                      | Controls if Transit Gateway route table should be created                                          | `bool`         | `true`  |
-| transit_gateway_route_table_id         | Identifier of EC2 Transit Gateway Route Table to use when creating attachments                     | `string`       | `null`  |
-| share_tgw                              | Whether to share the Transit Gateway with other accounts using Resource Access Manager             | `bool`         | `true`  |
-| ram_name                               | Name of the resource share for the Transit Gateway                                                 | `string`       | `""`    |
-| ram_allow_external_principals          | Whether to allow external principals for the resource share                                        | `bool`         | `false` |
-| ram_principals                         | List of principals to share the Transit Gateway with (AWS Account IDs, Organization ARNs, OU ARNs) | `list(string)` | `[]`    |
-| ram_resource_share_arn                 | ARN of the Resource Share that will be used to share the Transit Gateway                           | `string`       | `""`    |
-| use_region_prefix                      | Whether to include the region prefix in resource names. When false, names omit the region prefix   | `bool`         | `true`  |
-| tags_common                            | Common tags to be applied to all resources                                                         | `map(string)`  | `{}`    |
-| timeouts                               | Create, update, and delete timeout configurations for the transit gateway                          | `object`       | `null`  |
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| tags_common | Common tags applied to all resources | `map(string)` | `{}` |
+| region_prefix | Region prefix used in names. If `null`, it is derived from the region using the internal map | `string` | `null` |
+| use_region_prefix | Whether to include the region prefix in resource names | `bool` | `true` |
+| region | Region where the resources are managed. Defaults to the provider region | `string` | `null` |
+| name | Explicit Name tag for the Transit Gateway (overrides the generated name) | `string` | `null` |
+| tgw_tags | Additional tags for the Transit Gateway | `map(string)` | `{}` |
+| create_tgw | Controls if the Transit Gateway should be created | `bool` | `true` |
+| description | Description of the Transit Gateway | `string` | `null` |
+| amazon_side_asn | Private ASN for the Amazon side of a BGP session | `string` | `null` |
+| enable_default_route_table_association | Whether attachments are automatically associated with the default association route table | `bool` | `true` |
+| enable_default_route_table_propagation | Whether attachments automatically propagate routes to the default propagation route table | `bool` | `true` |
+| enable_auto_accept_shared_attachments | Whether attachment requests are automatically accepted | `bool` | `false` |
+| enable_vpn_ecmp_support | Whether VPN ECMP support is enabled | `bool` | `true` |
+| enable_multicast_support | Whether multicast support is enabled | `bool` | `false` |
+| enable_dns_support | Whether DNS support is enabled | `bool` | `true` |
+| enable_encryption_support | Whether encryption support is enabled. `null` leaves the AWS default untouched | `bool` | `null` |
+| enable_sg_referencing_support | Whether security group referencing support is enabled | `bool` | `true` |
+| transit_gateway_cidr_blocks | IPv4 (/24 or larger) or IPv6 (/64 or larger) CIDR blocks for the Transit Gateway | `list(string)` | `[]` |
+| timeouts | Create, update and delete timeouts for the Transit Gateway | `object({create, update, delete})` | `null` |
+| tgw_default_route_table_tags | Tags for the AWS-created default association route table. When non-empty, the module tags it (Name `{prefix}-tgwrtb-{account}-{project}-default`) | `map(string)` | `{}` |
+| create_tgw_routes | Controls if the custom Transit Gateway route table should be created | `bool` | `true` |
+| tgw_route_table_name | Explicit Name tag for the custom route table (overrides the generated name) | `string` | `null` |
+| tgw_route_table_tags | Additional tags for the custom route table | `map(string)` | `{}` |
+| transit_gateway_route_table_id | Not used by the module (it does not manage VPC attachments). Kept for backwards compatibility | `string` | `null` |
+| share_tgw | Whether to share the Transit Gateway through RAM | `bool` | `true` |
+| ram_name | Explicit name for the RAM resource share. If empty, the generated name is used | `string` | `""` |
+| ram_allow_external_principals | Whether principals outside your organization can be associated | `bool` | `false` |
+| ram_principals | Principals to share with (account IDs, Organization ARNs, OU ARNs) | `list(string)` | `[]` |
+| ram_resource_share_arn | ARN of the RAM share to accept. Required when `create_tgw = false` and `share_tgw = true` | `string` | `""` |
+| ram_tags | Additional tags for the RAM resource share | `map(string)` | `{}` |
 
 ## Outputs
 
-| Name                                               | Description                                                                                  |
-| -------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| transit_gateway_id                                 | EC2 Transit Gateway identifier                                                               |
-| transit_gateway_arn                                | EC2 Transit Gateway ARN                                                                      |
-| transit_gateway_owner_id                           | Identifier of the AWS account that owns the EC2 Transit Gateway                              |
-| transit_gateway_association_default_route_table_id | Identifier of the default association route table                                            |
-| transit_gateway_propagation_default_route_table_id | Identifier of the default propagation route table                                            |
-| transit_gateway_route_table_id                     | EC2 Transit Gateway Route Table identifier                                                   |
-| ram_resource_share_id                              | The Amazon Resource Name (ARN) of the resource share                                         |
-| ram_principal_association_id                       | The Amazon Resource Name (ARN) of the Resource Share and the principal, separated by a comma |
+| Name | Description |
+| --- | --- |
+| ec2_transit_gateway_arn | EC2 Transit Gateway ARN |
+| ec2_transit_gateway_id | EC2 Transit Gateway ID |
+| ec2_transit_gateway_owner_id | ID of the AWS account that owns the Transit Gateway |
+| ec2_transit_gateway_association_default_route_table_id | ID of the default association route table |
+| ec2_transit_gateway_propagation_default_route_table_id | ID of the default propagation route table |
+| ec2_transit_gateway_route_table_id | Custom Transit Gateway route table ID |
+| ec2_transit_gateway_route_table_default_association_route_table | Whether the custom route table is the default association route table |
+| ec2_transit_gateway_route_table_default_propagation_route_table | Whether the custom route table is the default propagation route table |
+| ec2_transit_gateway_default_route_table_tags | Tags applied by the module to the default association route table |
+| ram_resource_share_id | ARN of the RAM resource share |
+| ram_principal_association_id | ID of the first RAM principal association (share ARN and principal, comma separated) |
+
+All outputs return `null` when the corresponding resource is not created.
 
 ## Resource Access Manager (RAM) Sharing
 
@@ -212,13 +247,12 @@ You can share with:
 
 ```hcl
 module "transit_gateway" {
-  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.1.2"
+  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.2.0"
 
   account_name = "shared"
   project_name = "myapp"
 
   share_tgw      = true
-  ram_name       = "tgw-share"
   ram_principals = [
     "123456789012",  # Account 1
     "234567890123",  # Account 2
@@ -234,13 +268,12 @@ module "transit_gateway" {
 
 ```hcl
 module "transit_gateway" {
-  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.1.2"
+  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.2.0"
 
   account_name = "shared"
   project_name = "myapp"
 
   share_tgw      = true
-  ram_name       = "tgw-org-share"
   ram_principals = [
     "arn:aws:organizations::111111111111:organization/o-xxxxxxxxxx"
   ]
@@ -255,13 +288,12 @@ module "transit_gateway" {
 
 ```hcl
 module "transit_gateway" {
-  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.1.2"
+  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.2.0"
 
   account_name = "shared"
   project_name = "myapp"
 
   share_tgw      = true
-  ram_name       = "tgw-ou-share"
   ram_principals = [
     "arn:aws:organizations::111111111111:ou/o-xxxxxxxxxx/ou-xxxx-yyyyyyyy"
   ]
@@ -276,7 +308,7 @@ module "transit_gateway" {
 
 ```hcl
 module "transit_gateway" {
-  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.1.2"
+  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.2.0"
 
   account_name      = "shared"
   project_name      = "myapp"
@@ -294,7 +326,7 @@ If you don't need to share the Transit Gateway or if AWS Organizations is not en
 
 ```hcl
 module "transit_gateway" {
-  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.1.2"
+  source = "github.com/jhonmezaa/terraform-aws-transit-gateway//transit-gateway?ref=v1.2.0"
 
   account_name = "shared"
   project_name = "myapp"
@@ -309,62 +341,30 @@ module "transit_gateway" {
 
 ## Tags
 
-All resources are tagged using the `tags_common` variable. The module automatically adds a `Name` tag following the naming convention.
-
-**Tag Merge Order:**
-
-1. **Name tag** (auto-generated): `{region}-{resource_type}-{account_name}-{project_name}`
-2. **tags_common** (user-provided common tags)
-
-**Example:**
+Every resource is tagged with:
 
 ```hcl
-tags_common = {
-  Environment = "production"
-  Project     = "Infrastructure"
-  ManagedBy   = "Terraform"
-  Owner       = "Cloud-Team"
-  CostCenter  = "IT-Infrastructure"
-}
+merge(var.tags_common, <resource tags>, { Name = <generated name>, ManagedBy = "Terraform" })
 ```
 
-**Resulting tags on Transit Gateway:**
+`<resource tags>` is `tgw_tags`, `tgw_route_table_tags`, `ram_tags` or `tgw_default_route_table_tags`. `Name` and `ManagedBy` always win.
+
+**Example** with `tags_common = { Environment = "production", Owner = "Cloud-Team" }` in `us-east-2`:
 
 ```hcl
 {
-  Name        = "ause2-tgw-shared-myapp"  # Auto-generated
-  Environment = "production"              # From tags_common
-  Project     = "Infrastructure"          # From tags_common
-  ManagedBy   = "Terraform"               # From tags_common
-  Owner       = "Cloud-Team"              # From tags_common
-  CostCenter  = "IT-Infrastructure"       # From tags_common
+  Environment = "production"
+  Owner       = "Cloud-Team"
+  Name        = "ause2-tgw-shared-myapp"
+  ManagedBy   = "Terraform"
 }
 ```
 
 ## Examples
 
-Complete examples are available in the [example](./example) directory:
-
-- **[Terraform Example](./example/terraform)**: Standard Terraform implementation
-- **[Terragrunt Example](./example/terragrunt)**: DRY Terragrunt configuration with remote state
-
-## Adding New Regions
-
-To add support for new AWS regions, update the `region_prefix` map in `9-locals.tf`:
-
-```hcl
-locals {
-  region_prefix = {
-    "us-east-1"      = "ause1"
-    "us-east-2"      = "ause2"
-    # Add new regions here
-    "eu-west-2"      = "euwe2"
-    "ap-south-1"     = "apso1"
-  }
-}
-```
-
-If a region is not found in the map, the module will use `"unkn"` as the region code.
+- [basic](./examples/basic): Transit Gateway and custom route table, without RAM sharing
+- [cross-account](./examples/cross-account): Transit Gateway shared through RAM
+- [vpn-integration](./examples/vpn-integration): Transit Gateway prepared for Site-to-Site VPN
 
 ## Architecture
 
